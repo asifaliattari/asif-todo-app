@@ -1,6 +1,6 @@
 # TaskFlow - AI-Powered Project Management System
 
-**Created by Asif Ali AstolixGen for PIAIC Hackathon 2026**
+**Created by Asif Ali AstolixGen for GIAIC Hackathon 2026**
 
 ## Overview
 
@@ -138,14 +138,14 @@ The app features a stunning dark theme with:
 
 **Asif Ali AstolixGen**
 
-Created for PIAIC (Presidential Initiative for Artificial Intelligence and Computing) Hackathon 2026
+Created for GIAIC (Governor's Initiative for Artificial Intelligence and Computing) Hackathon 2026
 
 ## License
 
-This project is created for educational purposes as part of the PIAIC Hackathon.
+This project is created for educational purposes as part of the GIAIC Hackathon.
 
 ## Acknowledgments
 
 - Original concept inspired by Sharmeen's TaskFlow project
 - Built with Next.js and modern web technologies
-- Designed for the PIAIC Hackathon competition
+- Designed for the GIAIC Hackathon competition

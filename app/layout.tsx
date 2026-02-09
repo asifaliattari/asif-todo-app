@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "TaskFlow - Asif Ali AstolixGen",
-  description: "AI-Powered Project Management System by Asif Ali AstolixGen for PIAIC Hackathon",
+  description: "AI-Powered Project Management System by Asif Ali AstolixGen for GIAIC Hackathon",
   authors: [{ name: "Asif Ali AstolixGen" }],
 };
 

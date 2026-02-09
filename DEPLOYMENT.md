@@ -91,4 +91,4 @@ npm start
 
 ---
 
-**Created by Asif Ali AstolixGen for PIAIC Hackathon 2026**
+**Created by Asif Ali AstolixGen for GIAIC Hackathon 2026**

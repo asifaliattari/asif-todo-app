@@ -210,7 +210,7 @@ export default function Home() {
               </h1>
               <p className="text-gray-400 mt-1 flex items-center gap-2">
                 <User className="w-4 h-4" />
-                by Asif Ali AstolixGen - PIAIC Hackathon
+                by Asif Ali AstolixGen - GIAIC Hackathon
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -425,7 +425,7 @@ export default function Home() {
       <footer className="mt-16 bg-gray-900/50 backdrop-blur-lg border-t border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-400">
           <p>
-            Created by <span className="text-blue-400 font-semibold">Asif Ali AstolixGen</span> for PIAIC Hackathon 2026
+            Created by <span className="text-blue-400 font-semibold">Asif Ali AstolixGen</span> for GIAIC Hackathon 2026
           </p>
           <p className="text-sm mt-2">AI-Powered Project Management System</p>
         </div>
