@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   Trash2,
@@ -14,9 +15,11 @@ import {
   Calendar,
   Tag,
   User,
+  LogOut,
 } from "lucide-react";
 import { format } from "date-fns";
 import Chatbot from "@/components/Chatbot";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Task {
   id: string;
@@ -30,6 +33,8 @@ interface Task {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const { user, logout, loading, isAuthenticated } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -40,20 +45,51 @@ export default function Home() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isListening, setIsListening] = useState(false);
 
-  // Load tasks from localStorage
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
+    if (!loading && !isAuthenticated) {
+      router.push("/login");
     }
-  }, []);
+  }, [loading, isAuthenticated, router]);
 
-  // Save tasks to localStorage
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  // Load tasks from localStorage (user-specific)
   useEffect(() => {
-    if (tasks.length > 0) {
-      localStorage.setItem("tasks", JSON.stringify(tasks));
+    if (user) {
+      const savedTasks = localStorage.getItem(`tasks_${user.id}`);
+      if (savedTasks) {
+        setTasks(JSON.parse(savedTasks));
+      }
     }
-  }, [tasks]);
+  }, [user]);
+
+  // Save tasks to localStorage (user-specific)
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(`tasks_${user.id}`, JSON.stringify(tasks));
+    }
+  }, [tasks, user]);
 
   const addTask = () => {
     if (!newTaskTitle.trim()) return;
@@ -213,7 +249,7 @@ export default function Home() {
                 by Asif Ali AstolixGen - GIAIC Hackathon
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div className="text-right">
                 <p className="text-sm text-gray-400">Total Tasks</p>
                 <p className="text-2xl font-bold text-blue-400">{tasks.length}</p>
@@ -223,6 +259,21 @@ export default function Home() {
                 <p className="text-2xl font-bold text-emerald-400">
                   {tasks.filter((t) => t.status === "completed").length}
                 </p>
+              </div>
+              <div className="border-l border-gray-700 pl-6">
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm text-gray-400">Welcome</p>
+                    <p className="text-lg font-semibold text-white">{user.name}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 transition-all group"
+                    title="Logout"
+                  >
+                    <LogOut className="w-5 h-5 text-red-400 group-hover:text-red-300" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -8,6 +8,8 @@ TaskFlow is a modern, feature-rich todo application built with Next.js 15, TypeS
 
 ## Features
 
+✅ **User Authentication** - Secure signup/login system with email and password
+✅ **User-Specific Tasks** - Each user has their own private task list
 ✅ **AI Chatbot Assistant** - Natural language task management with intelligent AI assistant
 ✅ **Task Management** - Add, delete, update, and view tasks with ease
 ✅ **Priority System** - Organize tasks by Low, Medium, and High priority
@@ -17,7 +19,7 @@ TaskFlow is a modern, feature-rich todo application built with Next.js 15, TypeS
 ✅ **Text-to-Speech** - Listen to your tasks read aloud
 ✅ **Due Dates** - Set deadlines for your tasks with date and time
 ✅ **Dark Theme** - Beautiful gradient dark theme for comfortable viewing
-✅ **Local Storage** - All tasks are saved locally in your browser
+✅ **Local Storage** - All user data and tasks saved securely in browser
 ✅ **Responsive Design** - Works perfectly on desktop, tablet, and mobile
 
 ### AI Chatbot Features
