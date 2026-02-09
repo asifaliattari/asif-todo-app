@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 import { format } from "date-fns";
+import Chatbot from "@/components/Chatbot";
 
 interface Task {
   id: string;
@@ -128,6 +129,40 @@ export default function Home() {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "en-US";
       window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleChatbotCommand = (command: string) => {
+    const lowerCommand = command.toLowerCase();
+
+    // Extract task details from natural language
+    if (lowerCommand.includes("add") || lowerCommand.includes("create")) {
+      // Extract task title (remove command words)
+      let taskTitle = command
+        .replace(/add|create|new task|task/gi, "")
+        .trim();
+
+      // Detect priority
+      let priority: "low" | "medium" | "high" = "medium";
+      if (lowerCommand.includes("high priority") || lowerCommand.includes("urgent")) {
+        priority = "high";
+        taskTitle = taskTitle.replace(/high priority|urgent/gi, "").trim();
+      } else if (lowerCommand.includes("low priority")) {
+        priority = "low";
+        taskTitle = taskTitle.replace(/low priority/gi, "").trim();
+      }
+
+      // Create the task if we have a title
+      if (taskTitle) {
+        const newTask: Task = {
+          id: Date.now().toString(),
+          title: taskTitle,
+          priority: priority,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+        };
+        setTasks([newTask, ...tasks]);
+      }
     }
   };
 
@@ -395,6 +430,9 @@ export default function Home() {
           <p className="text-sm mt-2">AI-Powered Project Management System</p>
         </div>
       </footer>
+
+      {/* AI Chatbot */}
+      <Chatbot onTaskCommand={handleChatbotCommand} />
     </div>
   );
 }
