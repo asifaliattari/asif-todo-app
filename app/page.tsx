@@ -20,6 +20,7 @@ import {
 import { format } from "date-fns";
 import Chatbot from "@/components/Chatbot";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthGuard } from "@/components/AuthGuard";
 
 interface Task {
   id: string;
@@ -32,9 +33,12 @@ interface Task {
   createdAt: string;
 }
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
-  const { user, logout, loading, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
+
+  // Safety check - AuthGuard should prevent this, but TypeScript needs it
+  if (!user) return null;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -44,30 +48,6 @@ export default function Home() {
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isListening, setIsListening] = useState(false);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [loading, isAuthenticated, router]);
-
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!isAuthenticated || !user) {
-    return null;
-  }
 
   const handleLogout = () => {
     logout();
@@ -485,5 +465,13 @@ export default function Home() {
       {/* AI Chatbot */}
       <Chatbot onTaskCommand={handleChatbotCommand} />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthGuard>
+      <HomeContent />
+    </AuthGuard>
   );
 }
