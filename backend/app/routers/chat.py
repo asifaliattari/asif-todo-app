@@ -1,22 +1,20 @@
 """
-Chat API Router
-Handles AI chatbot interactions with OpenAI
+Chat API Router - Direct Database Access
+Handles AI chatbot interactions with OpenAI using direct database access
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List
 from openai import OpenAI
+from sqlmodel import Session, select
+from datetime import datetime
 import os
 import json
 
 from app.auth import get_current_user_id, security
-import sys
-from pathlib import Path
-# Add backend directory to path to import mcp
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from mcp.tools import TaskTools
-
+from app.database import get_session
+from app.models.task import Task, TaskCreate, TaskResponse
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -169,10 +167,10 @@ OPENAI_TOOLS = [
 async def send_message(
     request: ChatRequest,
     user_id: str = Depends(get_current_user_id),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    session: Session = Depends(get_session)
 ):
     """
-    Send a message to the AI chatbot
+    Send a message to the AI chatbot with direct database access
 
     The AI can use tools to manage tasks on behalf of the user.
     """
@@ -181,12 +179,6 @@ async def send_message(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI service not configured. Please set OPENAI_API_KEY."
         )
-
-    # Get the JWT token from credentials
-    user_token = credentials.credentials
-
-    # Initialize task tools
-    tools = TaskTools()
 
     # Build conversation history
     messages = [
@@ -256,47 +248,152 @@ Remember: Be conversational and encouraging. Make task management feel like chat
                 function_name = tool_call.function.name
                 function_args = json.loads(tool_call.function.arguments)
 
-                # Execute the tool
+                # Execute the tool with direct database access
                 tool_result = None
-                if function_name == "create_task":
-                    print(f"=== Executing create_task ===")
-                    print(f"Title: {function_args.get('title')}")
-                    print(f"Description: {function_args.get('description', '')}")
-                    print(f"Has token: {user_token is not None}")
-                    print(f"Token (first 20 chars): {user_token[:20] if user_token else 'None'}")
-                    tool_result = await tools.create_task(
-                        title=function_args.get("title"),
-                        description=function_args.get("description", ""),
-                        user_token=user_token
-                    )
-                    print(f"Tool result: {tool_result}")
-                elif function_name == "list_tasks":
-                    tool_result = await tools.list_tasks(
-                        status=function_args.get("status", "all"),
-                        user_token=user_token
-                    )
-                elif function_name == "update_task":
-                    tool_result = await tools.update_task(
-                        task_id=function_args.get("task_id"),
-                        title=function_args.get("title"),
-                        description=function_args.get("description"),
-                        user_token=user_token
-                    )
-                elif function_name == "delete_task":
-                    tool_result = await tools.delete_task(
-                        task_id=function_args.get("task_id"),
-                        user_token=user_token
-                    )
-                elif function_name == "mark_task_complete":
-                    tool_result = await tools.mark_task_complete(
-                        task_id=function_args.get("task_id"),
-                        completed=function_args.get("completed", True),
-                        user_token=user_token
-                    )
-                elif function_name == "get_task_stats":
-                    tool_result = await tools.get_task_stats(
-                        user_token=user_token
-                    )
+
+                try:
+                    if function_name == "create_task":
+                        # Create task directly in database
+                        title = function_args.get("title", "").strip()
+                        description = function_args.get("description", "").strip()
+
+                        task = Task(
+                            user_id=user_id,
+                            title=title,
+                            description=description if description else None,
+                            completed=False
+                        )
+                        session.add(task)
+                        session.commit()
+                        session.refresh(task)
+
+                        tool_result = {
+                            "success": True,
+                            "task": TaskResponse.model_validate(task).model_dump(),
+                            "message": f"Created task: {title}"
+                        }
+
+                    elif function_name == "list_tasks":
+                        # List tasks from database
+                        status_filter = function_args.get("status", "all")
+                        statement = select(Task).where(Task.user_id == user_id)
+
+                        if status_filter == "active":
+                            statement = statement.where(Task.completed == False)
+                        elif status_filter == "completed":
+                            statement = statement.where(Task.completed == True)
+
+                        statement = statement.order_by(Task.created_at.desc())
+                        tasks = session.exec(statement).all()
+
+                        tool_result = {
+                            "success": True,
+                            "tasks": [TaskResponse.model_validate(t).model_dump() for t in tasks],
+                            "count": len(tasks)
+                        }
+
+                    elif function_name == "update_task":
+                        # Update task in database
+                        task_id = int(function_args.get("task_id"))
+                        statement = select(Task).where(Task.id == task_id, Task.user_id == user_id)
+                        task = session.exec(statement).first()
+
+                        if task:
+                            if "title" in function_args and function_args["title"]:
+                                task.title = function_args["title"].strip()
+                            if "description" in function_args:
+                                task.description = function_args["description"].strip() if function_args["description"] else None
+                            if "completed" in function_args:
+                                task.completed = function_args["completed"]
+
+                            task.updated_at = datetime.utcnow()
+                            session.add(task)
+                            session.commit()
+                            session.refresh(task)
+
+                            tool_result = {
+                                "success": True,
+                                "task": TaskResponse.model_validate(task).model_dump(),
+                                "message": "Task updated successfully"
+                            }
+                        else:
+                            tool_result = {
+                                "success": False,
+                                "task": None,
+                                "message": "Task not found"
+                            }
+
+                    elif function_name == "delete_task":
+                        # Delete task from database
+                        task_id = int(function_args.get("task_id"))
+                        statement = select(Task).where(Task.id == task_id, Task.user_id == user_id)
+                        task = session.exec(statement).first()
+
+                        if task:
+                            session.delete(task)
+                            session.commit()
+                            tool_result = {
+                                "success": True,
+                                "message": "Task deleted successfully"
+                            }
+                        else:
+                            tool_result = {
+                                "success": False,
+                                "message": "Task not found"
+                            }
+
+                    elif function_name == "mark_task_complete":
+                        # Mark task complete in database
+                        task_id = int(function_args.get("task_id"))
+                        completed = function_args.get("completed", True)
+                        statement = select(Task).where(Task.id == task_id, Task.user_id == user_id)
+                        task = session.exec(statement).first()
+
+                        if task:
+                            task.completed = completed
+                            task.updated_at = datetime.utcnow()
+                            session.add(task)
+                            session.commit()
+                            session.refresh(task)
+
+                            tool_result = {
+                                "success": True,
+                                "task": TaskResponse.model_validate(task).model_dump(),
+                                "message": f"Task marked as {'complete' if completed else 'incomplete'}"
+                            }
+                        else:
+                            tool_result = {
+                                "success": False,
+                                "task": None,
+                                "message": "Task not found"
+                            }
+
+                    elif function_name == "get_task_stats":
+                        # Get task statistics from database
+                        statement = select(Task).where(Task.user_id == user_id)
+                        tasks = session.exec(statement).all()
+
+                        total = len(tasks)
+                        completed = sum(1 for t in tasks if t.completed)
+                        active = total - completed
+                        completion_rate = round((completed / total * 100) if total > 0 else 0, 1)
+
+                        tool_result = {
+                            "success": True,
+                            "stats": {
+                                "total": total,
+                                "active": active,
+                                "completed": completed,
+                                "completion_rate": completion_rate
+                            }
+                        }
+
+                except Exception as e:
+                    print(f"Tool execution error: {str(e)}")
+                    tool_result = {
+                        "success": False,
+                        "message": f"Error: {str(e)}"
+                    }
 
                 # Add tool result to messages
                 messages.append({
