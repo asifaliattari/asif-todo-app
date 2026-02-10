@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY ./app ./app
+COPY ./mcp ./mcp
 
 # Expose port
 EXPOSE 7860

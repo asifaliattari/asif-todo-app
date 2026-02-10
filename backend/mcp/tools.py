@@ -37,6 +37,10 @@ class TaskTools:
                 response.raise_for_status()
                 return response.json()
             except httpx.HTTPError as e:
+                print(f"Tool API Error: {str(e)}")
+                print(f"URL: {self.backend_url}{endpoint}")
+                print(f"Method: {method}")
+                print(f"Has token: {user_token is not None}")
                 return {
                     "success": False,
                     "error": str(e),

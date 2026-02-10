@@ -3,13 +3,14 @@ Chat API Router
 Handles AI chatbot interactions with OpenAI
 """
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List
 from openai import OpenAI
 import os
 import json
 
-from app.auth import get_current_user_id
+from app.auth import get_current_user_id, security
 import sys
 from pathlib import Path
 # Add backend directory to path to import mcp
@@ -167,7 +168,8 @@ OPENAI_TOOLS = [
 @router.post("/message", response_model=ChatResponse)
 async def send_message(
     request: ChatRequest,
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Depends(get_current_user_id),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
     Send a message to the AI chatbot
@@ -179,6 +181,9 @@ async def send_message(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI service not configured. Please set OPENAI_API_KEY."
         )
+
+    # Get the JWT token from credentials
+    user_token = credentials.credentials
 
     # Initialize task tools
     tools = TaskTools()
@@ -254,37 +259,43 @@ Remember: Be conversational and encouraging. Make task management feel like chat
                 # Execute the tool
                 tool_result = None
                 if function_name == "create_task":
+                    print(f"=== Executing create_task ===")
+                    print(f"Title: {function_args.get('title')}")
+                    print(f"Description: {function_args.get('description', '')}")
+                    print(f"Has token: {user_token is not None}")
+                    print(f"Token (first 20 chars): {user_token[:20] if user_token else 'None'}")
                     tool_result = await tools.create_task(
                         title=function_args.get("title"),
                         description=function_args.get("description", ""),
-                        user_token=user_id
+                        user_token=user_token
                     )
+                    print(f"Tool result: {tool_result}")
                 elif function_name == "list_tasks":
                     tool_result = await tools.list_tasks(
                         status=function_args.get("status", "all"),
-                        user_token=user_id
+                        user_token=user_token
                     )
                 elif function_name == "update_task":
                     tool_result = await tools.update_task(
                         task_id=function_args.get("task_id"),
                         title=function_args.get("title"),
                         description=function_args.get("description"),
-                        user_token=user_id
+                        user_token=user_token
                     )
                 elif function_name == "delete_task":
                     tool_result = await tools.delete_task(
                         task_id=function_args.get("task_id"),
-                        user_token=user_id
+                        user_token=user_token
                     )
                 elif function_name == "mark_task_complete":
                     tool_result = await tools.mark_task_complete(
                         task_id=function_args.get("task_id"),
                         completed=function_args.get("completed", True),
-                        user_token=user_id
+                        user_token=user_token
                     )
                 elif function_name == "get_task_stats":
                     tool_result = await tools.get_task_stats(
-                        user_token=user_id
+                        user_token=user_token
                     )
 
                 # Add tool result to messages
