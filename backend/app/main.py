@@ -10,7 +10,7 @@ import os
 from dotenv import load_dotenv
 
 from app.database import create_db_and_tables
-from app.routers import auth, tasks, chat
+from app.routers import auth, tasks, chat, files, admin
 
 load_dotenv()
 
@@ -53,6 +53,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(chat.router)  # Phase III: AI Chat
+app.include_router(files.router)  # File Upload
+app.include_router(admin.router)  # Admin Panel
 
 
 @app.get("/")
@@ -60,13 +62,15 @@ def read_root():
     """Root endpoint - API information"""
     return {
         "name": "TaskFlow API",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "author": "Asif Ali AstolixGen",
         "hackathon": "GIAIC Hackathon II",
-        "phase": "Phase III - AI Chatbot Integration",
+        "phase": "Phase V+ - Advanced Features + File Upload",
         "docs": "/docs",
         "health": "/api/health",
-        "chat": "/api/chat"
+        "chat": "/api/chat",
+        "files": "/api/files",
+        "admin": "/api/admin"
     }
 
 

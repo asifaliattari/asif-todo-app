@@ -32,12 +32,17 @@ def signup(user_data: UserCreate, session: Session = Depends(get_session)):
             detail="Email already registered"
         )
 
+    # Determine user role (admin for specific email)
+    ADMIN_EMAIL = "asif.alimusharaf@gmail.com"
+    user_role = "admin" if user_data.email.lower() == ADMIN_EMAIL else "user"
+
     # Create new user
     user = User(
         id=str(uuid.uuid4()),
         email=user_data.email.lower(),
         name=user_data.name,
-        hashed_password=hash_password(user_data.password)
+        hashed_password=hash_password(user_data.password),
+        role=user_role
     )
 
     session.add(user)
@@ -54,6 +59,7 @@ def signup(user_data: UserCreate, session: Session = Depends(get_session)):
             id=user.id,
             name=user.name,
             email=user.email,
+            role=user.role,
             created_at=user.created_at
         )
     }
@@ -95,6 +101,7 @@ def login(credentials: UserLogin, session: Session = Depends(get_session)):
             id=user.id,
             name=user.name,
             email=user.email,
+            role=user.role,
             created_at=user.created_at
         )
     }

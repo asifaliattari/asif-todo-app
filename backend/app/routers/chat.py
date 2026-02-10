@@ -15,6 +15,7 @@ import json
 from app.auth import get_current_user_id, security
 from app.database import get_session
 from app.models.task import Task, TaskCreate, TaskResponse
+from app.models.file import FileUpload
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -44,6 +45,41 @@ if not openai_api_key:
     print("⚠️ Warning: OPENAI_API_KEY not set")
 
 client = OpenAI(api_key=openai_api_key) if openai_api_key else None
+
+
+def get_user_file_context(user_id: str, session: Session) -> str:
+    """
+    Get user's uploaded file context for AI
+
+    Returns formatted string of all user's processed file content
+    """
+    statement = select(FileUpload).where(
+        FileUpload.user_id == user_id,
+        FileUpload.processed == True
+    )
+    files = session.exec(statement).all()
+
+    if not files:
+        return ""
+
+    context_parts = ["\n\n📎 USER'S UPLOADED DOCUMENTS:\n"]
+
+    for file in files:
+        if file.processed_content:
+            # Limit each file to 2000 chars to avoid token limits
+            content = file.processed_content[:2000]
+            if len(file.processed_content) > 2000:
+                content += "... (truncated)"
+
+            context_parts.append(f"\n📄 File: {file.original_filename}")
+            context_parts.append(f"Type: {file.file_type}")
+            context_parts.append(f"Content:\n{content}\n")
+            context_parts.append("-" * 80)
+
+    context_parts.append("\nYou can reference these documents when answering user questions.")
+    context_parts.append("If the user asks about something in their documents, search the content above.\n")
+
+    return "\n".join(context_parts)
 
 
 # Define tools in OpenAI function calling format
@@ -180,11 +216,11 @@ async def send_message(
             detail="AI service not configured. Please set OPENAI_API_KEY."
         )
 
-    # Build conversation history
-    messages = [
-        {
-            "role": "system",
-            "content": """You are a helpful and friendly AI assistant for TaskFlow, a task management application.
+    # Get user's uploaded file context
+    file_context = get_user_file_context(user_id, session)
+
+    # Build system prompt
+    system_content = """You are a helpful and friendly AI assistant for TaskFlow, a task management application.
 
 Your personality:
 - Warm, enthusiastic, and encouraging
@@ -210,6 +246,16 @@ Examples:
 - User: "Delete the meeting task" → First use list_tasks to find it, then delete_task
 
 Remember: Be conversational and encouraging. Make task management feel like chatting with a helpful friend!"""
+
+    # Add file context if available
+    if file_context:
+        system_content += file_context
+
+    # Build conversation history
+    messages = [
+        {
+            "role": "system",
+            "content": system_content
         }
     ]
 

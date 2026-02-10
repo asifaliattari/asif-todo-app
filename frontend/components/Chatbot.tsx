@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Bot, Paperclip } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -9,11 +10,12 @@ interface Message {
 }
 
 export default function Chatbot() {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hi! I\'m your TaskFlow AI assistant. I can help you manage your tasks. Try saying "Add a task to buy groceries" or "What are my tasks?"'
+      content: 'Hi! I\'m your TaskFlow AI assistant. I can help you manage your tasks. Try saying "Add a task to buy groceries" or "What are my tasks?" You can also upload documents using the 📎 button!'
     }
   ])
   const [input, setInput] = useState('')
@@ -155,6 +157,14 @@ export default function Chatbot() {
           {/* Input */}
           <div className="p-4 border-t border-gray-800">
             <div className="flex gap-2">
+              <button
+                onClick={() => router.push('/files')}
+                className="bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg px-3 py-2 transition-all flex items-center justify-center"
+                aria-label="Upload files"
+                title="Upload documents for AI context"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
               <input
                 type="text"
                 value={input}
@@ -178,7 +188,7 @@ export default function Chatbot() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
-              AI assistant powered by OpenAI GPT
+              AI assistant powered by OpenAI GPT • 📎 Upload docs for context
             </p>
           </div>
         </div>

@@ -16,6 +16,7 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True, max_length=255)
     name: str = Field(max_length=100)
     hashed_password: str = Field(max_length=255)
+    role: str = Field(default="user", max_length=20)  # "admin" or "user"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -38,4 +39,5 @@ class UserResponse(SQLModel):
     id: str
     name: str
     email: str
+    role: str
     created_at: datetime

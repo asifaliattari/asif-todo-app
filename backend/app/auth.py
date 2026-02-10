@@ -84,3 +84,60 @@ def get_current_user_id(
         )
 
     return user_id
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    session = None  # Will be injected separately
+):
+    """Get current user from JWT token with full details"""
+    from sqlmodel import Session, select
+    from app.database import get_session
+    from app.models.user import User
+
+    token = credentials.credentials
+    payload = decode_token(token)
+
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # If session provided, fetch full user
+    if session:
+        statement = select(User).where(User.id == user_id)
+        user = session.exec(statement).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        return user
+
+    return user_id
+
+
+def verify_admin(user_id: str = Depends(get_current_user_id), session = None) -> str:
+    """Verify that current user is an admin"""
+    from sqlmodel import Session, select
+    from app.models.user import User
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database session required"
+        )
+
+    statement = select(User).where(User.id == user_id)
+    user = session.exec(statement).first()
+
+    if not user or user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+
+    return user_id
