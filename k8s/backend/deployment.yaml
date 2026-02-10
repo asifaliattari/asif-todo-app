@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-backend
+  namespace: taskflow
+  labels:
+    app: taskflow
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taskflow
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: taskflow
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: taskflow-backend:latest
+        imagePullPolicy: Never  # For Minikube local images
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        # Environment from ConfigMap
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: ENVIRONMENT
+        - name: FRONTEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: FRONTEND_URL
+        - name: BACKEND_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: BACKEND_API_URL
+        - name: OPENAI_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: OPENAI_MODEL
+        # Secrets
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: taskflow-secrets
+              key: DATABASE_URL
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: taskflow-secrets
+              key: BETTER_AUTH_SECRET
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: taskflow-secrets
+              key: OPENAI_API_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
