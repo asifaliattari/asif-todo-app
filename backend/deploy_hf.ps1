@@ -73,7 +73,7 @@ if (Test-Path "$backendDir\README_HF.md") {
     Copy-Item "$backendDir\README_HF.md" -Destination "$tempDir\README.md"
 } else {
     Write-Host "⚠️  README_HF.md not found, creating basic README.md" -ForegroundColor Yellow
-    @"
+    $readmeContent = @"
 ---
 title: TaskFlow API
 emoji: ✅
@@ -86,7 +86,8 @@ app_port: 7860
 
 # TaskFlow Backend API
 FastAPI backend for TaskFlow todo application.
-"@ | Out-File -FilePath "$tempDir\README.md" -Encoding UTF8
+"@
+    $readmeContent | Out-File -FilePath "$tempDir\README.md" -Encoding UTF8
 }
 
 # Initialize git and push

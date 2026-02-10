@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://asifaliastolixgen-taskflow-api.hf.space",
+    "NEXT_PUBLIC_APP_NAME": "TaskFlow",
+    "NEXT_PUBLIC_AUTHOR": "Asif Ali AstolixGen",
+    "NEXT_PUBLIC_HACKATHON": "GIAIC Hackathon 2026"
+  }
+}
