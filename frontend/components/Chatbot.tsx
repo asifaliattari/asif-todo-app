@@ -178,7 +178,7 @@ export default function Chatbot() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
-              AI assistant powered by Claude
+              AI assistant powered by OpenAI GPT
             </p>
           </div>
         </div>
