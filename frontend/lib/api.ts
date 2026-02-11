@@ -113,6 +113,29 @@ class APIClient {
       method: 'DELETE',
     });
   }
+
+  // Generic HTTP methods for additional endpoints
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
+  }
+
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
+  }
 }
 
 export const api = new APIClient();
