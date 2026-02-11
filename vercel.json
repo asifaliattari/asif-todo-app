@@ -1,11 +1,24 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "devCommand": "cd frontend && npm run dev",
+  "installCommand": "cd frontend && npm install",
   "framework": "nextjs",
+  "outputDirectory": "frontend/.next",
   "git": {
     "deploymentEnabled": {
       "main": true
     }
-  }
+  },
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://asifaliastolixgen-taskflow-api.hf.space",
+    "NEXT_PUBLIC_APP_NAME": "TaskFlow",
+    "NEXT_PUBLIC_AUTHOR": "Asif Ali AstolixGen",
+    "NEXT_PUBLIC_HACKATHON": "GIAIC Hackathon 2026"
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://asifaliastolixgen-taskflow-api.hf.space/api/:path*"
+    }
+  ]
 }
