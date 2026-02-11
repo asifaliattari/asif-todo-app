@@ -116,3 +116,4 @@ class APIClient {
 }
 
 export const api = new APIClient();
+export const apiClient = api; // Alias for compatibility
