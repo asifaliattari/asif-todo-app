@@ -35,8 +35,8 @@ export default function FilesPage() {
   const loadData = async () => {
     try {
       const [filesData, permData] = await Promise.all([
-        apiClient.get("/api/files"),
-        apiClient.get("/api/files/permission/status"),
+        apiClient.get<{ files: UploadedFile[] }>("/api/files"),
+        apiClient.get<PermissionStatus>("/api/files/permission/status"),
       ]);
 
       setFiles(filesData.files || []);
@@ -63,7 +63,7 @@ export default function FilesPage() {
   const requestPermission = async () => {
     setRequesting(true);
     try {
-      const result = await apiClient.post("/api/files/request-permission", {});
+      const result = await apiClient.post<{ message: string }>("/api/files/request-permission", {});
       alert(result.message || "Permission request sent to admin");
       loadData();
     } catch (error: any) {

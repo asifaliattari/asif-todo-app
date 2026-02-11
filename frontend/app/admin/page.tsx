@@ -41,8 +41,8 @@ export default function AdminPanel() {
   const loadData = async () => {
     try {
       const [usersData, requestsData] = await Promise.all([
-        apiClient.get("/api/admin/users"),
-        apiClient.get("/api/admin/permission-requests"),
+        apiClient.get<User[]>("/api/admin/users"),
+        apiClient.get<PermissionRequest[]>("/api/admin/permission-requests"),
       ]);
 
       setUsers(usersData);
