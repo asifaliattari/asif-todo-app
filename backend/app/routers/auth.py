@@ -53,15 +53,17 @@ def signup(user_data: UserCreate, session: Session = Depends(get_session)):
     token = create_access_token(data={"sub": user.id, "email": user.email})
 
     # Return response
+    user_response = UserResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        created_at=user.created_at
+    )
+
     return {
         "token": token,
-        "user": UserResponse(
-            id=user.id,
-            name=user.name,
-            email=user.email,
-            role=user.role,
-            created_at=user.created_at
-        )
+        "user": user_response.model_dump(mode='json')
     }
 
 
@@ -95,13 +97,15 @@ def login(credentials: UserLogin, session: Session = Depends(get_session)):
     token = create_access_token(data={"sub": user.id, "email": user.email})
 
     # Return response
+    user_response = UserResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        created_at=user.created_at
+    )
+
     return {
         "token": token,
-        "user": UserResponse(
-            id=user.id,
-            name=user.name,
-            email=user.email,
-            role=user.role,
-            created_at=user.created_at
-        )
+        "user": user_response.model_dump(mode='json')
     }
