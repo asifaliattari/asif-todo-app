@@ -16,8 +16,17 @@ from app.auth import get_current_user_id, security
 from app.database import get_session
 from app.models.task import Task, TaskCreate, TaskResponse
 from app.models.file import FileUpload
+from app.models.conversation import Conversation, Message
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 # Pydantic models
@@ -28,10 +37,12 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: Optional[List[ChatMessage]] = []
+    conversation_id: Optional[int] = None  # For continuing existing conversations
+    history: Optional[List[ChatMessage]] = []  # Deprecated: kept for backward compatibility
 
 
 class ChatResponse(BaseModel):
+    conversation_id: int  # Return conversation ID for stateless persistence
     response: str
     tool_used: Optional[str] = None
     tool_result: Optional[dict] = None
@@ -206,8 +217,9 @@ async def send_message(
     session: Session = Depends(get_session)
 ):
     """
-    Send a message to the AI chatbot with direct database access
+    Send a message to the AI chatbot with conversation persistence
 
+    Phase III Enhancement: Stateless server with database-stored conversation history.
     The AI can use tools to manage tasks on behalf of the user.
     """
     if not client:
@@ -215,6 +227,30 @@ async def send_message(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI service not configured. Please set OPENAI_API_KEY."
         )
+
+    # Step 1: Get or create conversation
+    if request.conversation_id:
+        conversation = session.get(Conversation, request.conversation_id)
+        if not conversation or conversation.user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+    else:
+        # Create new conversation
+        conversation = Conversation(
+            user_id=user_id,
+            title=request.message[:50] + ("..." if len(request.message) > 50 else "")
+        )
+        session.add(conversation)
+        session.commit()
+        session.refresh(conversation)
+
+    # Step 2: Fetch conversation history from database
+    statement = select(Message).where(
+        Message.conversation_id == conversation.id
+    ).order_by(Message.created_at)
+    db_messages = session.exec(statement).all()
 
     # Get user's uploaded file context
     file_context = get_user_file_context(user_id, session)
@@ -251,7 +287,7 @@ Remember: Be conversational and encouraging. Make task management feel like chat
     if file_context:
         system_content += file_context
 
-    # Build conversation history
+    # Build conversation history for OpenAI
     messages = [
         {
             "role": "system",
@@ -259,18 +295,27 @@ Remember: Be conversational and encouraging. Make task management feel like chat
         }
     ]
 
-    # Add history (keep last 10 messages for context)
-    for msg in request.history[-10:]:
+    # Add database messages (last 20 for context window management)
+    for msg in db_messages[-20:]:
         messages.append({
             "role": msg.role,
             "content": msg.content
         })
 
-    # Add current message
+    # Add current user message
     messages.append({
         "role": "user",
         "content": request.message
     })
+
+    # Step 3: Store user message in database
+    user_message = Message(
+        conversation_id=conversation.id,
+        role="user",
+        content=request.message
+    )
+    session.add(user_message)
+    session.commit()
 
     try:
         # Call OpenAI API with function calling
@@ -315,7 +360,7 @@ Remember: Be conversational and encouraging. Make task management feel like chat
 
                         tool_result = {
                             "success": True,
-                            "task": TaskResponse.model_validate(task).model_dump(),
+                            "task": TaskResponse.model_validate(task).model_dump(mode='json'),
                             "message": f"Created task: {title}"
                         }
 
@@ -334,7 +379,7 @@ Remember: Be conversational and encouraging. Make task management feel like chat
 
                         tool_result = {
                             "success": True,
-                            "tasks": [TaskResponse.model_validate(t).model_dump() for t in tasks],
+                            "tasks": [TaskResponse.model_validate(t).model_dump(mode='json') for t in tasks],
                             "count": len(tasks)
                         }
 
@@ -359,7 +404,7 @@ Remember: Be conversational and encouraging. Make task management feel like chat
 
                             tool_result = {
                                 "success": True,
-                                "task": TaskResponse.model_validate(task).model_dump(),
+                                "task": TaskResponse.model_validate(task).model_dump(mode='json'),
                                 "message": "Task updated successfully"
                             }
                         else:
@@ -404,7 +449,7 @@ Remember: Be conversational and encouraging. Make task management feel like chat
 
                             tool_result = {
                                 "success": True,
-                                "task": TaskResponse.model_validate(task).model_dump(),
+                                "task": TaskResponse.model_validate(task).model_dump(mode='json'),
                                 "message": f"Task marked as {'complete' if completed else 'incomplete'}"
                             }
                         else:
@@ -446,7 +491,7 @@ Remember: Be conversational and encouraging. Make task management feel like chat
                     "role": "tool",
                     "tool_call_id": tool_call.id,
                     "name": function_name,
-                    "content": json.dumps(tool_result)
+                    "content": json.dumps(tool_result, cls=DateTimeEncoder)
                 })
 
             # Get final response from GPT with tool results
@@ -457,25 +502,169 @@ Remember: Be conversational and encouraging. Make task management feel like chat
 
             final_message = final_response.choices[0].message.content
 
+            # Step 4: Store assistant response in database
+            # Serialize tool_result to handle datetime objects
+            tool_calls_data = None
+            if tool_calls:
+                tool_calls_data = json.loads(json.dumps({
+                    "tool": tool_calls[0].function.name,
+                    "result": tool_result
+                }, cls=DateTimeEncoder))
+
+            assistant_message = Message(
+                conversation_id=conversation.id,
+                role="assistant",
+                content=final_message,
+                tool_calls=tool_calls_data
+            )
+            session.add(assistant_message)
+
+            # Update conversation timestamp
+            conversation.updated_at = datetime.utcnow()
+            session.add(conversation)
+            session.commit()
+
+            # Serialize tool_result for JSON response
+            serialized_tool_result = None
+            if tool_result:
+                serialized_tool_result = json.loads(json.dumps(tool_result, cls=DateTimeEncoder))
+
             return ChatResponse(
+                conversation_id=conversation.id,
                 response=final_message,
                 tool_used=tool_calls[0].function.name if tool_calls else None,
-                tool_result=tool_result
+                tool_result=serialized_tool_result
             )
 
         # No tool used, just return text response
+        # Step 4: Store assistant response in database
+        assistant_message = Message(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=response_message.content
+        )
+        session.add(assistant_message)
+
+        # Update conversation timestamp
+        conversation.updated_at = datetime.utcnow()
+        session.add(conversation)
+        session.commit()
+
         return ChatResponse(
+            conversation_id=conversation.id,
             response=response_message.content,
             tool_used=None,
             tool_result=None
         )
 
     except Exception as e:
+        import traceback
         print(f"Chat error: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI service error: {str(e)}"
         )
+
+
+@router.get("/conversations")
+async def list_conversations(
+    user_id: str = Depends(get_current_user_id),
+    session: Session = Depends(get_session)
+):
+    """
+    List all conversations for the current user
+    Phase III: Conversation persistence
+    """
+    statement = select(Conversation).where(
+        Conversation.user_id == user_id
+    ).order_by(Conversation.updated_at.desc())
+
+    conversations = session.exec(statement).all()
+
+    # Get message count for each conversation
+    result = []
+    for conv in conversations:
+        message_count = len(session.exec(
+            select(Message).where(Message.conversation_id == conv.id)
+        ).all())
+
+        result.append({
+            "id": conv.id,
+            "title": conv.title,
+            "message_count": message_count,
+            "created_at": conv.created_at,
+            "updated_at": conv.updated_at
+        })
+
+    return {"conversations": result, "total": len(result)}
+
+
+@router.get("/conversations/{conversation_id}")
+async def get_conversation(
+    conversation_id: int,
+    user_id: str = Depends(get_current_user_id),
+    session: Session = Depends(get_session)
+):
+    """
+    Get full conversation history
+    Phase III: Conversation persistence
+    """
+    conversation = session.get(Conversation, conversation_id)
+
+    if not conversation or conversation.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found"
+        )
+
+    # Get all messages
+    statement = select(Message).where(
+        Message.conversation_id == conversation_id
+    ).order_by(Message.created_at)
+
+    messages = session.exec(statement).all()
+
+    return {
+        "id": conversation.id,
+        "title": conversation.title,
+        "created_at": conversation.created_at,
+        "updated_at": conversation.updated_at,
+        "messages": [
+            {
+                "id": msg.id,
+                "role": msg.role,
+                "content": msg.content,
+                "tool_calls": msg.tool_calls,
+                "created_at": msg.created_at
+            }
+            for msg in messages
+        ]
+    }
+
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: int,
+    user_id: str = Depends(get_current_user_id),
+    session: Session = Depends(get_session)
+):
+    """
+    Delete a conversation and all its messages
+    Phase III: Conversation management
+    """
+    conversation = session.get(Conversation, conversation_id)
+
+    if not conversation or conversation.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found"
+        )
+
+    session.delete(conversation)  # CASCADE will delete messages
+    session.commit()
+
+    return {"success": True, "message": "Conversation deleted"}
 
 
 @router.get("/health")

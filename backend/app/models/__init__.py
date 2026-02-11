@@ -14,6 +14,15 @@ from .file import (
     PermissionResponse,
     PermissionRequestResponse,
 )
+from .conversation import (
+    Conversation,
+    Message,
+    ChatRequest,
+    ChatResponse,
+    MessageResponse,
+    ConversationResponse,
+    ConversationWithMessages,
+)
 
 __all__ = [
     "User",
@@ -32,4 +41,11 @@ __all__ = [
     "PermissionGrantRequest",
     "PermissionResponse",
     "PermissionRequestResponse",
+    "Conversation",
+    "Message",
+    "ChatRequest",
+    "ChatResponse",
+    "MessageResponse",
+    "ConversationResponse",
+    "ConversationWithMessages",
 ]

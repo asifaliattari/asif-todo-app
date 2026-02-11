@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from app.models.user import User
 from app.models.task import Task
 from app.models.file import FileUpload, FilePermission, PermissionRequest
+from app.models.conversation import Conversation, Message
 
 load_dotenv()
 

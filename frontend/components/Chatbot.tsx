@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Loader2, Bot, Paperclip } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Bot, Paperclip, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Message {
@@ -12,6 +12,7 @@ interface Message {
 export default function Chatbot() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [conversationId, setConversationId] = useState<number | null>(null)
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -29,6 +30,39 @@ export default function Chatbot() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Load conversation from localStorage on mount
+  useEffect(() => {
+    const savedConversationId = localStorage.getItem('chatbot_conversation_id')
+    if (savedConversationId) {
+      const convId = parseInt(savedConversationId)
+      setConversationId(convId)
+      loadConversation(convId)
+    }
+  }, [])
+
+  const loadConversation = async (convId: number) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const token = localStorage.getItem('token')
+
+      const response = await fetch(`${apiUrl}/api/chat/conversations/${convId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data.messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to load conversation:', error)
+    }
+  }
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return
@@ -52,7 +86,7 @@ export default function Chatbot() {
         },
         body: JSON.stringify({
           message: userMessage,
-          history: messages.slice(-10) // Send last 10 messages for context
+          conversation_id: conversationId // Use conversation_id for persistence
         })
       })
 
@@ -61,6 +95,12 @@ export default function Chatbot() {
       }
 
       const data = await response.json()
+
+      // Save conversation_id for future messages
+      if (data.conversation_id && data.conversation_id !== conversationId) {
+        setConversationId(data.conversation_id)
+        localStorage.setItem('chatbot_conversation_id', data.conversation_id.toString())
+      }
 
       // Add AI response
       setMessages(prev => [...prev, {
@@ -77,6 +117,17 @@ export default function Chatbot() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const startNewConversation = () => {
+    setConversationId(null)
+    localStorage.removeItem('chatbot_conversation_id')
+    setMessages([
+      {
+        role: 'assistant',
+        content: 'Hi! I\'m your TaskFlow AI assistant. I can help you manage your tasks. Try saying "Add a task to buy groceries" or "What are my tasks?" You can also upload documents using the 📎 button!'
+      }
+    ])
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -111,16 +162,30 @@ export default function Chatbot() {
               </div>
               <div>
                 <h3 className="text-white font-semibold">AI Assistant</h3>
-                <p className="text-white/80 text-xs">Always here to help</p>
+                <p className="text-white/80 text-xs">
+                  {conversationId ? `Chat #${conversationId}` : 'New conversation'}
+                </p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white/80 hover:text-white transition-colors"
-              aria-label="Close chat"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {conversationId && (
+                <button
+                  onClick={startNewConversation}
+                  className="text-white/80 hover:text-white transition-colors"
+                  aria-label="New conversation"
+                  title="Start new conversation"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white/80 hover:text-white transition-colors"
+                aria-label="Close chat"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -188,7 +253,7 @@ export default function Chatbot() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
-              AI assistant powered by OpenAI GPT • 📎 Upload docs for context
+              AI powered by OpenAI • Conversation auto-saved • 📎 Upload docs
             </p>
           </div>
         </div>
