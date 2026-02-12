@@ -51,27 +51,27 @@ export default function TaskFilters({ onFilterChange }: TaskFiltersProps) {
   };
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
+    <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 md:p-4 mb-6">
       {/* Search Bar */}
-      <div className="flex gap-3">
+      <div className="flex gap-2 md:gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
             placeholder="Search tasks..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm md:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+          className={`px-3 md:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
             showFilters ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
         >
           <Filter size={18} />
-          Filters
+          <span className="hidden sm:inline">Filters</span>
         </button>
       </div>
 
