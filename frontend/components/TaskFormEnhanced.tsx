@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Plus, Calendar, Tag as TagIcon, Clock, Repeat } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface TaskFormEnhancedProps {
   onSubmit: (data: {
@@ -20,7 +22,7 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
   const [tags, setTags] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState<Date | null>(null);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState('weekly');
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
       };
 
       if (dueDate) {
-        taskData.due_date = new Date(dueDate).toISOString();
+        taskData.due_date = dueDate.toISOString();
       }
 
       if (isRecurring) {
@@ -58,7 +60,7 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
       setDescription('');
       setPriority('medium');
       setTags('');
-      setDueDate('');
+      setDueDate(null);
       setIsRecurring(false);
       setShowAdvanced(false);
     } catch (error) {
@@ -143,14 +145,20 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
           <div>
             <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
               <Calendar size={16} />
-              Due Date
+              Due Date & Time
             </label>
-            <input
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            <DatePicker
+              selected={dueDate}
+              onChange={(date: Date | null) => setDueDate(date)}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="MMMM d, yyyy h:mm aa"
+              placeholderText="Click to select date & time"
               disabled={loading}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              calendarClassName="bg-gray-800 border-gray-700"
+              minDate={new Date()}
             />
           </div>
 
