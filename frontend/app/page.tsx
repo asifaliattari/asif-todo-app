@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/AuthGuard';
 import TaskForm from '@/components/TaskForm';
 import TaskList from '@/components/TaskList';
+import TaskStatistics from '@/components/TaskStatistics';
+import ProgressChart from '@/components/ProgressChart';
 import { api, Task } from '@/lib/api';
 import { LogOut, RefreshCw } from 'lucide-react';
 
@@ -83,6 +85,12 @@ function DashboardContent() {
             {error}
           </div>
         )}
+
+        {/* Task Statistics */}
+        {!loading && <TaskStatistics tasks={tasks} />}
+
+        {/* Progress Chart */}
+        {!loading && <ProgressChart tasks={tasks} />}
 
         {/* Task Form */}
         <div className="mb-8">
