@@ -43,8 +43,11 @@ export default function SignupPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             TaskFlow
           </h1>
-          <p className="text-gray-400 text-sm mb-6">
-            by Asif Ali AstolixGen
+          <p className="text-gray-400 text-sm mb-1">
+            by <span className="text-purple-400 font-semibold">Asif Ali</span>
+          </p>
+          <p className="text-gray-500 text-xs mb-6">
+            Data Analyst & Researcher
           </p>
           <h2 className="text-2xl md:text-3xl font-bold text-white">
             Get started

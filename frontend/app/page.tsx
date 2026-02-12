@@ -182,9 +182,15 @@ function DashboardContent() {
         )}
 
         {/* Footer */}
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-2">
+          <p className="text-gray-400 text-base font-semibold">
+            Created by <span className="text-purple-400">Asif Ali</span>
+          </p>
           <p className="text-gray-500 text-sm">
-            Created by Asif Ali AstolixGen | GIAIC Hackathon 2026
+            Data Analyst & Researcher
+          </p>
+          <p className="text-gray-600 text-xs">
+            GIAIC Hackathon 2026
           </p>
         </div>
       </div>
