@@ -7,6 +7,8 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.auth import get_current_user_id
 from app.models.user import User
+from app.models.task import Task
+from app.models.conversation import Conversation, Message
 from app.models.file import (
     FileUpload,
     FilePermission,
@@ -302,3 +304,93 @@ def list_all_users(
         })
 
     return results
+
+
+@router.post("/users/{user_email}/reset-password")
+def reset_password(
+    user_email: str,
+    session: Session = Depends(get_session)
+):
+    """
+    Reset user password to 'Test12345678' (Public access for demo/reset)
+    """
+    from app.auth import hash_password
+
+    # Find target user
+    user_statement = select(User).where(User.email == user_email.lower())
+    target_user = session.exec(user_statement).first()
+
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Reset password to default
+    target_user.hashed_password = hash_password("Test12345678")
+    session.add(target_user)
+    session.commit()
+
+    return {"message": f"Password reset for {user_email}. New password: Test12345678"}
+
+
+@router.delete("/users/{user_email}")
+def delete_user(
+    user_email: str,
+    session: Session = Depends(get_session)
+):
+    """
+    Delete a user and all their data (Public access for demo/reset)
+    """
+    # Find target user
+    user_statement = select(User).where(User.email == user_email.lower())
+    target_user = session.exec(user_statement).first()
+
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Delete all related data first
+    # 1. Delete conversations and messages
+    conv_statement = select(Conversation).where(Conversation.user_id == target_user.id)
+    conversations = session.exec(conv_statement).all()
+    for conv in conversations:
+        # Delete messages first
+        msg_statement = select(Message).where(Message.conversation_id == conv.id)
+        messages = session.exec(msg_statement).all()
+        for msg in messages:
+            session.delete(msg)
+        # Then delete conversation
+        session.delete(conv)
+
+    # 2. Delete tasks
+    task_statement = select(Task).where(Task.user_id == target_user.id)
+    tasks = session.exec(task_statement).all()
+    for task in tasks:
+        session.delete(task)
+
+    # 3. Delete files
+    file_statement = select(FileUpload).where(FileUpload.user_id == target_user.id)
+    files = session.exec(file_statement).all()
+    for file in files:
+        session.delete(file)
+
+    # 4. Delete permissions
+    perm_statement = select(FilePermission).where(FilePermission.user_id == target_user.id)
+    permissions = session.exec(perm_statement).all()
+    for perm in permissions:
+        session.delete(perm)
+
+    # 5. Delete permission requests
+    req_statement = select(PermissionRequest).where(PermissionRequest.user_id == target_user.id)
+    requests = session.exec(req_statement).all()
+    for req in requests:
+        session.delete(req)
+
+    # Finally delete the user
+    session.delete(target_user)
+    session.commit()
+
+    return {"message": f"User {user_email} and all related data deleted successfully"}

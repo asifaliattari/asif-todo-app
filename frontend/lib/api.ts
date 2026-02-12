@@ -17,6 +17,13 @@ export interface Task {
   title: string;
   description?: string;
   completed: boolean;
+  priority?: string;
+  tags?: string[];
+  due_date?: string;
+  reminder_date?: string;
+  is_recurring?: boolean;
+  recurrence_pattern?: any;
+  parent_task_id?: number;
   created_at: string;
   updated_at: string;
 }
@@ -80,15 +87,44 @@ class APIClient {
   }
 
   // Task endpoints
-  async getTasks(completed?: boolean): Promise<{ tasks: Task[]; total: number }> {
-    const params = completed !== undefined ? `?completed=${completed}` : '';
-    return this.request<{ tasks: Task[]; total: number }>(`/api/tasks${params}`);
+  async getTasks(filters?: {
+    completed?: boolean | null;
+    priority?: string;
+    tags?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }): Promise<{ tasks: Task[]; total: number; count: number }> {
+    const params = new URLSearchParams();
+
+    if (filters?.completed !== null && filters?.completed !== undefined) {
+      params.append('completed', String(filters.completed));
+    }
+    if (filters?.priority) params.append('priority', filters.priority);
+    if (filters?.tags) params.append('tags', filters.tags);
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.sortBy) params.append('sort_by', filters.sortBy);
+    if (filters?.sortOrder) params.append('sort_order', filters.sortOrder);
+
+    const queryString = params.toString();
+    return this.request<{ tasks: Task[]; total: number; count: number }>(
+      `/api/tasks${queryString ? `?${queryString}` : ''}`
+    );
   }
 
-  async createTask(title: string, description?: string): Promise<Task> {
+  async createTask(taskData: {
+    title: string;
+    description?: string;
+    priority?: string;
+    tags?: string[];
+    due_date?: string;
+    reminder_date?: string;
+    is_recurring?: boolean;
+    recurrence_pattern?: any;
+  }): Promise<Task> {
     return this.request<Task>('/api/tasks', {
       method: 'POST',
-      body: JSON.stringify({ title, description }),
+      body: JSON.stringify(taskData),
     });
   }
 

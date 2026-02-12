@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/AuthGuard';
-import TaskForm from '@/components/TaskForm';
+import TaskFormEnhanced from '@/components/TaskFormEnhanced';
 import TaskList from '@/components/TaskList';
 import TaskStatistics from '@/components/TaskStatistics';
 import ProgressChart from '@/components/ProgressChart';
+import TaskFilters from '@/components/TaskFilters';
 import Chatbot from '@/components/Chatbot';
 import { api, Task } from '@/lib/api';
 import { LogOut, RefreshCw } from 'lucide-react';
@@ -16,11 +17,12 @@ function DashboardContent() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filters, setFilters] = useState<any>({});
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (customFilters?: any) => {
     try {
       setError('');
-      const response = await api.getTasks();
+      const response = await api.getTasks(customFilters || filters);
       setTasks(response.tasks);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch tasks');
@@ -33,8 +35,13 @@ function DashboardContent() {
     fetchTasks();
   }, []);
 
-  const handleCreateTask = async (title: string, description: string) => {
-    const newTask = await api.createTask(title, description);
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+    fetchTasks(newFilters);
+  };
+
+  const handleCreateTask = async (taskData: any) => {
+    const newTask = await api.createTask(taskData);
     setTasks([newTask, ...tasks]);
   };
 
@@ -93,9 +100,12 @@ function DashboardContent() {
         {/* Progress Chart */}
         {!loading && <ProgressChart tasks={tasks} />}
 
+        {/* Task Filters */}
+        <TaskFilters onFilterChange={handleFilterChange} />
+
         {/* Task Form */}
         <div className="mb-8">
-          <TaskForm onSubmit={handleCreateTask} />
+          <TaskFormEnhanced onSubmit={handleCreateTask} />
         </div>
 
         {/* Task List */}

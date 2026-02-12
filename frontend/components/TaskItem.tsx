@@ -113,15 +113,56 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskIte
         </button>
 
         <div className="flex-1 min-w-0">
-          <h3 className={`text-lg font-medium text-white ${task.completed ? 'line-through' : ''}`}>
-            {task.title}
-          </h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className={`text-lg font-medium text-white ${task.completed ? 'line-through' : ''}`}>
+              {task.title}
+            </h3>
+            {/* Priority Badge */}
+            {task.priority && task.priority !== 'medium' && (
+              <span className={`px-2 py-0.5 text-xs rounded ${
+                task.priority === 'high' ? 'bg-red-500/20 text-red-400' :
+                task.priority === 'low' ? 'bg-green-500/20 text-green-400' :
+                'bg-yellow-500/20 text-yellow-400'
+              }`}>
+                {task.priority === 'high' ? '🔴 High' :
+                 task.priority === 'low' ? '🟢 Low' : '🟡 Medium'}
+              </span>
+            )}
+          </div>
+
           {task.description && (
             <p className="text-gray-400 text-sm mt-1">{task.description}</p>
           )}
-          <p className="text-gray-500 text-xs mt-2">
-            Created {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
-          </p>
+
+          {/* Tags */}
+          {task.tags && task.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {task.tags.map((tag, idx) => (
+                <span key={idx} className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Due Date & Created Date */}
+          <div className="flex items-center gap-3 mt-2">
+            {task.due_date && (
+              <p className={`text-xs ${
+                new Date(task.due_date) < new Date() && !task.completed
+                  ? 'text-red-400 font-semibold'
+                  : 'text-blue-400'
+              }`}>
+                📅 Due: {new Date(task.due_date).toLocaleDateString()}
+              </p>
+            )}
+            {task.is_recurring && (
+              <span className="text-xs text-purple-400">🔄 Recurring</span>
+            )}
+            <p className="text-gray-500 text-xs">
+              Created {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-2">

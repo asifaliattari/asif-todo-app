@@ -64,3 +64,4 @@ uv.lock
 # Temporary files
 *.tmp
 .claude/
+nul
