@@ -10,7 +10,8 @@ import os
 from dotenv import load_dotenv
 
 from app.database import create_db_and_tables
-from app.routers import auth, tasks, chat, files, admin
+from app.routers import auth, tasks, chat, files, admin, notifications
+from app.scheduler import start_scheduler, stop_scheduler
 
 load_dotenv()
 
@@ -25,9 +26,16 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     print("Database tables created successfully!")
 
+    # Start email reminder scheduler
+    print("Starting email reminder scheduler...")
+    start_scheduler()
+    print("Scheduler started - checking reminders every 10 minutes")
+
     yield
 
     # Shutdown
+    print("Shutting down scheduler...")
+    stop_scheduler()
     print("Shutting down...")
 
 
@@ -55,6 +63,7 @@ app.include_router(tasks.router)
 app.include_router(chat.router)  # Phase III: AI Chat
 app.include_router(files.router)  # File Upload
 app.include_router(admin.router)  # Admin Panel
+app.include_router(notifications.router)  # Email Notifications
 
 
 @app.get("/")
