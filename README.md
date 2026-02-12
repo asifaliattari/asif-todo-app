@@ -264,3 +264,4 @@ Educational project for GIAIC Hackathon 2026.
 ---
 
 **Built with ❤️ using Spec-Driven Development and Claude Code**
+# Backend updated to HF Space
