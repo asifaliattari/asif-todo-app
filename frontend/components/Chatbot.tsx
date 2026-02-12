@@ -193,7 +193,7 @@ export default function Chatbot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed inset-x-0 bottom-0 md:bottom-6 md:right-6 md:left-auto w-full md:w-96 h-[80vh] md:h-[600px] bg-gray-900 rounded-t-2xl md:rounded-2xl shadow-2xl z-50 flex flex-col border border-gray-800">
+        <div className="fixed inset-x-0 bottom-0 md:bottom-6 md:right-6 md:left-auto w-full md:w-96 h-[75vh] max-h-[600px] md:h-[600px] bg-gray-900 rounded-t-2xl md:rounded-2xl shadow-2xl z-50 flex flex-col border border-gray-800 safe-area-inset-bottom">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -260,39 +260,39 @@ export default function Chatbot() {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-gray-800">
-            <div className="flex gap-2">
+          <div className="p-3 md:p-4 border-t border-gray-800">
+            <div className="flex gap-1.5 md:gap-2">
               <button
                 onClick={() => router.push('/files')}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg px-3 py-2 transition-all flex items-center justify-center"
+                className="bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg px-2.5 md:px-3 py-2 transition-all flex items-center justify-center flex-shrink-0"
                 aria-label="Upload files"
-                title="Upload documents for AI context"
+                title="Upload documents"
               >
-                <Paperclip className="w-5 h-5" />
+                <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
               </button>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder="Type message..."
                 disabled={isLoading}
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 md:px-4 py-2 text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 min-w-0"
               />
               <button
                 onClick={sendMessage}
                 disabled={isLoading || !input.trim()}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-lg px-4 py-2 transition-all disabled:cursor-not-allowed flex items-center justify-center"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-lg px-3 md:px-4 py-2 transition-all disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
                 aria-label="Send message"
               >
                 {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
                 ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 md:w-5 md:h-5" />
                 )}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-gray-500 mt-2 text-center hidden md:block">
               AI powered by OpenAI • Conversation auto-saved • 📎 Upload docs
             </p>
           </div>
