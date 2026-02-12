@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: taskflow
+  labels:
+    app: frontend
+    tier: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: web
+    spec:
+      containers:
+      - name: frontend
+        image: taskflow-frontend:latest
+        imagePullPolicy: Never  # Use local image (for Minikube)
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: NEXT_PUBLIC_API_URL
+        - name: NEXT_PUBLIC_APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: NEXT_PUBLIC_APP_NAME
+        - name: NEXT_PUBLIC_AUTHOR
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: NEXT_PUBLIC_AUTHOR
+        - name: NEXT_PUBLIC_HACKATHON
+          valueFrom:
+            configMapKeyRef:
+              name: taskflow-config
+              key: NEXT_PUBLIC_HACKATHON
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10

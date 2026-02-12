@@ -65,3 +65,4 @@ uv.lock
 *.tmp
 .claude/
 nul
+k8s/secret.yaml
