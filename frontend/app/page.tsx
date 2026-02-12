@@ -40,6 +40,18 @@ function DashboardContent() {
 
   useEffect(() => {
     fetchTasks();
+
+    // Listen for chatbot task updates
+    const handleChatbotUpdate = () => {
+      console.log('Chatbot task update detected, refreshing tasks...');
+      fetchTasks();
+    };
+
+    window.addEventListener('chatbot-task-updated', handleChatbotUpdate);
+
+    return () => {
+      window.removeEventListener('chatbot-task-updated', handleChatbotUpdate);
+    };
   }, []);
 
   const handleFilterChange = (newFilters: any) => {
@@ -55,6 +67,12 @@ function DashboardContent() {
       filteredTasks = allTasks.filter(t => !t.completed);
     }
     setTasks(filteredTasks);
+  };
+
+  const handleRefresh = () => {
+    setFilters({});
+    setLoading(true);
+    fetchTasks({});
   };
 
   const handleCreateTask = async (taskData: any) => {
@@ -106,7 +124,7 @@ function DashboardContent() {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
             <button
-              onClick={fetchTasks}
+              onClick={handleRefresh}
               className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
               title="Refresh tasks"
             >
@@ -126,7 +144,7 @@ function DashboardContent() {
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center gap-2">
             <button
-              onClick={fetchTasks}
+              onClick={handleRefresh}
               className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
               title="Refresh"
             >
