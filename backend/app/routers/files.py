@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.auth import get_current_user_id
 from app.models.user import User
+from app.email_service import email_service
 from app.models.file import (
     FileUpload,
     FilePermission,
@@ -295,6 +296,18 @@ def request_permission(
 
     session.add(request)
     session.commit()
+
+    # Send email notification to admin
+    # Find admin user
+    admin_statement = select(User).where(User.role == "admin")
+    admin_user = session.exec(admin_statement).first()
+
+    if admin_user:
+        email_service.send_permission_request_email(
+            admin_email=admin_user.email,
+            user_name=user.name,
+            user_email=user.email
+        )
 
     return {"message": "Permission request sent to admin"}
 

@@ -326,6 +326,152 @@ class EmailService:
         session.commit()
         print(f"Checked reminders: {len(tasks)} tasks processed")
 
+    def send_permission_request_email(self, admin_email: str, user_name: str, user_email: str):
+        """Send email to admin when user requests file upload permission"""
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                                    <h1 style="margin: 0; color: white; font-size: 28px;">🔔 Admin Alert</h1>
+                                    <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">New Permission Request</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 30px;">
+                                    <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">Hi Admin,</p>
+                                    <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px;">
+                                        A user has requested file upload permission in TaskFlow.
+                                    </p>
+
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-left: 4px solid #8b5cf6; border-radius: 6px; margin: 20px 0;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0; color: #111827; font-size: 14px;"><strong>User Name:</strong> {user_name}</p>
+                                                <p style="margin: 10px 0; color: #111827; font-size: 14px;"><strong>Email:</strong> {user_email}</p>
+                                                <p style="margin: 10px 0 0 0; color: #6b7280; font-size: 13px;">
+                                                    📅 Requested: {datetime.utcnow().strftime("%B %d, %Y at %I:%M %p")}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <p style="margin: 20px 0 10px 0; color: #6b7280; font-size: 14px;">
+                                        <strong>To review and approve/deny:</strong>
+                                    </p>
+
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="https://asif-todo-app.vercel.app/admin" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: bold; font-size: 16px; margin-right: 10px;">
+                                                    Review in Admin Panel
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                        Created by Asif Ali AstolixGen | GIAIC Hackathon 2026
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+
+        return self.send_email(
+            to_email=admin_email,
+            subject="🔔 New Permission Request - TaskFlow",
+            html_content=html
+        )
+
+    def send_new_user_notification(self, admin_email: str, user_name: str, user_email: str):
+        """Send email to admin when new user signs up"""
+
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+                                    <h1 style="margin: 0; color: white; font-size: 28px;">🎉 New User Signup</h1>
+                                    <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">TaskFlow Admin Notification</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 30px;">
+                                    <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">Hi Admin,</p>
+                                    <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px;">
+                                        A new user has joined TaskFlow!
+                                    </p>
+
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ecfdf5; border-left: 4px solid #10b981; border-radius: 6px; margin: 20px 0;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0; color: #111827; font-size: 14px;"><strong>Name:</strong> {user_name}</p>
+                                                <p style="margin: 10px 0; color: #111827; font-size: 14px;"><strong>Email:</strong> {user_email}</p>
+                                                <p style="margin: 10px 0 0 0; color: #6b7280; font-size: 13px;">
+                                                    📅 Signed up: {datetime.utcnow().strftime("%B %d, %Y at %I:%M %p")}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="https://asif-todo-app.vercel.app/admin" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                                                    View Users in Admin Panel
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                        Created by Asif Ali AstolixGen | GIAIC Hackathon 2026
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+
+        return self.send_email(
+            to_email=admin_email,
+            subject="🎉 New User Signup - TaskFlow",
+            html_content=html
+        )
+
 
 # Global instance
 email_service = EmailService()
