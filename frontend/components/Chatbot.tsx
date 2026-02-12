@@ -136,15 +136,14 @@ export default function Chatbot() {
         content: data.response
       }])
 
-      // Trigger task update event if chatbot performed a task operation
-      const taskOperationKeywords = ['created', 'added', 'updated', 'deleted', 'removed', 'completed', 'marked'];
-      const responseText = data.response.toLowerCase();
-      const hasTaskOperation = taskOperationKeywords.some(keyword => responseText.includes(keyword));
+      // Trigger task update event - always refresh after chatbot response
+      // This ensures dashboard stays in sync with any task operations
+      console.log('Chatbot responded, triggering dashboard refresh...');
 
-      if (hasTaskOperation) {
-        console.log('Task operation detected in chatbot response, triggering update...');
+      // Small delay to ensure backend operation completed
+      setTimeout(() => {
         window.dispatchEvent(new CustomEvent('chatbot-task-updated'));
-      }
+      }, 500);
 
     } catch (error) {
       console.error('Chat error:', error)
