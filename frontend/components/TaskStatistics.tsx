@@ -5,9 +5,10 @@ import { CheckCircle2, Clock, ListTodo, TrendingUp } from 'lucide-react';
 
 interface TaskStatisticsProps {
   tasks: Task[];
+  onFilterClick?: (filter: 'all' | 'completed' | 'pending') => void;
 }
 
-export default function TaskStatistics({ tasks }: TaskStatisticsProps) {
+export default function TaskStatistics({ tasks, onFilterClick }: TaskStatisticsProps) {
   const total = tasks.length;
   const completed = tasks.filter(t => t.completed).length;
   const pending = total - completed;
@@ -20,7 +21,9 @@ export default function TaskStatistics({ tasks }: TaskStatisticsProps) {
       icon: ListTodo,
       color: 'text-blue-400',
       bgColor: 'bg-blue-400/10',
-      borderColor: 'border-blue-400/20'
+      borderColor: 'border-blue-400/20',
+      hoverColor: 'hover:bg-blue-400/20',
+      filter: 'all' as const
     },
     {
       label: 'Completed',
@@ -28,7 +31,9 @@ export default function TaskStatistics({ tasks }: TaskStatisticsProps) {
       icon: CheckCircle2,
       color: 'text-green-400',
       bgColor: 'bg-green-400/10',
-      borderColor: 'border-green-400/20'
+      borderColor: 'border-green-400/20',
+      hoverColor: 'hover:bg-green-400/20',
+      filter: 'completed' as const
     },
     {
       label: 'Pending',
@@ -36,7 +41,9 @@ export default function TaskStatistics({ tasks }: TaskStatisticsProps) {
       icon: Clock,
       color: 'text-yellow-400',
       bgColor: 'bg-yellow-400/10',
-      borderColor: 'border-yellow-400/20'
+      borderColor: 'border-yellow-400/20',
+      hoverColor: 'hover:bg-yellow-400/20',
+      filter: 'pending' as const
     },
     {
       label: 'Progress',
@@ -44,7 +51,9 @@ export default function TaskStatistics({ tasks }: TaskStatisticsProps) {
       icon: TrendingUp,
       color: 'text-purple-400',
       bgColor: 'bg-purple-400/10',
-      borderColor: 'border-purple-400/20'
+      borderColor: 'border-purple-400/20',
+      hoverColor: 'hover:bg-purple-400/20',
+      filter: null
     }
   ];
 
@@ -52,14 +61,23 @@ export default function TaskStatistics({ tasks }: TaskStatisticsProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
+        const isClickable = stat.filter && onFilterClick;
         return (
           <div
             key={index}
-            className={`${stat.bgColor} ${stat.borderColor} border rounded-lg p-4 transition-transform hover:scale-105`}
+            onClick={() => isClickable && onFilterClick(stat.filter!)}
+            className={`${stat.bgColor} ${stat.borderColor} ${stat.hoverColor} border rounded-lg p-4 transition-all ${
+              isClickable ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : 'hover:scale-105'
+            }`}
+            role={isClickable ? 'button' : undefined}
+            tabIndex={isClickable ? 0 : undefined}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm mb-1">{stat.label}</p>
+                <p className="text-gray-400 text-sm mb-1">
+                  {stat.label}
+                  {isClickable && <span className="ml-2 text-xs opacity-60">▸</span>}
+                </p>
                 <p className={`${stat.color} text-3xl font-bold`}>
                   {stat.value}
                 </p>

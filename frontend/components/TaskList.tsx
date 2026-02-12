@@ -8,9 +8,10 @@ interface TaskListProps {
   onToggle: (id: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
   onUpdate: (id: number, title: string, description: string) => Promise<void>;
+  onViewDetails?: (task: Task) => void;
 }
 
-export default function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskListProps) {
+export default function TaskList({ tasks, onToggle, onDelete, onUpdate, onViewDetails }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16 md:py-20">
@@ -45,6 +46,7 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskLi
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onUpdate={onUpdate}
+                onViewDetails={onViewDetails ? () => onViewDetails(task) : undefined}
               />
             ))}
           </div>
@@ -70,6 +72,7 @@ export default function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskLi
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onUpdate={onUpdate}
+                onViewDetails={onViewDetails ? () => onViewDetails(task) : undefined}
               />
             ))}
           </div>

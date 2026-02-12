@@ -9,6 +9,7 @@ import TaskStatistics from '@/components/TaskStatistics';
 import ProgressChart from '@/components/ProgressChart';
 import TaskFilters from '@/components/TaskFilters';
 import Chatbot from '@/components/Chatbot';
+import TaskDetailModal from '@/components/TaskDetailModal';
 import { api, Task } from '@/lib/api';
 import { LogOut, RefreshCw, User, Menu, X } from 'lucide-react';
 
@@ -18,12 +19,18 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState<any>({});
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
 
   const fetchTasks = async (customFilters?: any) => {
     try {
       setError('');
       const response = await api.getTasks(customFilters || filters);
       setTasks(response.tasks);
+      if (!customFilters || Object.keys(customFilters).length === 0) {
+        setAllTasks(response.tasks);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch tasks');
     } finally {
@@ -38,6 +45,16 @@ function DashboardContent() {
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
     fetchTasks(newFilters);
+  };
+
+  const handleStatFilterClick = (filter: 'all' | 'completed' | 'pending') => {
+    let filteredTasks = allTasks;
+    if (filter === 'completed') {
+      filteredTasks = allTasks.filter(t => t.completed);
+    } else if (filter === 'pending') {
+      filteredTasks = allTasks.filter(t => !t.completed);
+    }
+    setTasks(filteredTasks);
   };
 
   const handleCreateTask = async (taskData: any) => {
@@ -58,6 +75,22 @@ function DashboardContent() {
   const handleUpdateTask = async (id: number, title: string, description: string) => {
     const updatedTask = await api.updateTask(id, { title, description });
     setTasks(tasks.map(t => t.id === id ? updatedTask : t));
+    setAllTasks(allTasks.map(t => t.id === id ? updatedTask : t));
+  };
+
+  const handleViewDetails = (task: Task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTask(null);
+  };
+
+  const handleEditFromModal = () => {
+    // Modal will close, inline edit will be available
+    setIsModalOpen(false);
   };
 
   return (
@@ -117,7 +150,7 @@ function DashboardContent() {
         )}
 
         {/* Task Statistics */}
-        {!loading && <TaskStatistics tasks={tasks} />}
+        {!loading && <TaskStatistics tasks={allTasks} onFilterClick={handleStatFilterClick} />}
 
         {/* Progress Chart */}
         {!loading && <ProgressChart tasks={tasks} />}
@@ -144,6 +177,7 @@ function DashboardContent() {
             onToggle={handleToggleTask}
             onDelete={handleDeleteTask}
             onUpdate={handleUpdateTask}
+            onViewDetails={handleViewDetails}
           />
         )}
 
@@ -154,6 +188,18 @@ function DashboardContent() {
           </p>
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onToggle={handleToggleTask}
+          onDelete={handleDeleteTask}
+          onEdit={handleEditFromModal}
+        />
+      )}
 
       {/* AI Chatbot */}
       <Chatbot />

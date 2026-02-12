@@ -10,9 +10,10 @@ interface TaskItemProps {
   onToggle: (id: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
   onUpdate: (id: number, title: string, description: string) => Promise<void>;
+  onViewDetails?: () => void;
 }
 
-export default function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
+export default function TaskItem({ task, onToggle, onDelete, onUpdate, onViewDetails }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDescription, setEditDescription] = useState(task.description || '');
@@ -104,10 +105,13 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskIte
   }
 
   return (
-    <div className={`bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-3 md:p-4 transition-all hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${task.completed ? 'opacity-60' : ''}`}>
-      <div className="flex items-start gap-2 md:gap-3">
+    <div className={`bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-3 md:p-4 transition-all hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${task.completed ? 'opacity-60' : ''} ${onViewDetails ? 'cursor-pointer' : ''}`}>
+      <div className="flex items-start gap-2 md:gap-3" onClick={onViewDetails}>
         <button
-          onClick={handleToggle}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggle();
+          }}
           disabled={loading}
           className="mt-0.5 text-purple-400 hover:text-purple-300 hover:scale-110 transition-all disabled:opacity-50 flex-shrink-0"
         >
@@ -171,7 +175,10 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskIte
 
         <div className="flex flex-col md:flex-row gap-1 md:gap-2 flex-shrink-0">
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
             disabled={loading}
             className="text-blue-400 hover:text-blue-300 hover:scale-110 transition-all disabled:opacity-50 p-1"
             title="Edit task"
@@ -179,7 +186,10 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskIte
             <Pencil size={18} />
           </button>
           <button
-            onClick={handleDelete}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
             disabled={loading}
             className="text-red-400 hover:text-red-300 hover:scale-110 transition-all disabled:opacity-50 p-1"
             title="Delete task"
