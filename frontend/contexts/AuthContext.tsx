@@ -61,8 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Clear auth data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+
+    // Clear all chatbot conversations for this user
+    if (user?.id) {
+      localStorage.removeItem(`chatbot_conversation_id_${user.id}`);
+    }
+
     setUser(null);
     router.push('/login');
   };

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageCircle, X, Send, Loader2, Bot, Paperclip, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -11,6 +12,7 @@ interface Message {
 
 export default function Chatbot() {
   const router = useRouter()
+  const { user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [conversationId, setConversationId] = useState<number | null>(null)
   const [messages, setMessages] = useState<Message[]>([
@@ -31,15 +33,38 @@ export default function Chatbot() {
     scrollToBottom()
   }, [messages])
 
-  // Load conversation from localStorage on mount
+  // Get user-specific localStorage key
+  const getConversationKey = () => {
+    return user?.id ? `chatbot_conversation_id_${user.id}` : null
+  }
+
+  // Load conversation from localStorage on mount (user-specific)
   useEffect(() => {
-    const savedConversationId = localStorage.getItem('chatbot_conversation_id')
+    if (!user?.id) return
+
+    const conversationKey = getConversationKey()
+    if (!conversationKey) return
+
+    const savedConversationId = localStorage.getItem(conversationKey)
     if (savedConversationId) {
       const convId = parseInt(savedConversationId)
       setConversationId(convId)
       loadConversation(convId)
     }
-  }, [])
+  }, [user?.id])
+
+  // Clear conversation when user changes
+  useEffect(() => {
+    if (!user?.id) {
+      setConversationId(null)
+      setMessages([
+        {
+          role: 'assistant',
+          content: 'Hi! I\'m your TaskFlow AI assistant. I can help you manage your tasks. Try saying "Add a task to buy groceries" or "What are my tasks?" You can also upload documents using the 📎 button!'
+        }
+      ])
+    }
+  }, [user?.id])
 
   const loadConversation = async (convId: number) => {
     try {
@@ -96,10 +121,13 @@ export default function Chatbot() {
 
       const data = await response.json()
 
-      // Save conversation_id for future messages
+      // Save conversation_id for future messages (user-specific)
       if (data.conversation_id && data.conversation_id !== conversationId) {
         setConversationId(data.conversation_id)
-        localStorage.setItem('chatbot_conversation_id', data.conversation_id.toString())
+        const conversationKey = getConversationKey()
+        if (conversationKey) {
+          localStorage.setItem(conversationKey, data.conversation_id.toString())
+        }
       }
 
       // Add AI response
@@ -131,7 +159,10 @@ export default function Chatbot() {
 
   const startNewConversation = () => {
     setConversationId(null)
-    localStorage.removeItem('chatbot_conversation_id')
+    const conversationKey = getConversationKey()
+    if (conversationKey) {
+      localStorage.removeItem(conversationKey)
+    }
     setMessages([
       {
         role: 'assistant',
