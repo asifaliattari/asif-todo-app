@@ -132,8 +132,11 @@ function DashboardContent() {
 
         {/* Task List */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="text-white text-xl">Loading tasks...</div>
+          <div className="text-center py-16 md:py-20">
+            <div className="inline-block">
+              <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-400 text-sm md:text-base">Loading your tasks...</p>
+            </div>
           </div>
         ) : (
           <TaskList

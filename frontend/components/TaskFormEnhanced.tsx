@@ -76,34 +76,35 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
       <div>
         <input
           type="text"
-          placeholder="Task title..."
+          placeholder="What needs to be done?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full px-3 md:px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm md:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
           disabled={loading}
+          autoFocus
         />
       </div>
 
       {/* Description */}
       <div>
         <textarea
-          placeholder="Description (optional)..."
+          placeholder="Add more details (optional)..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+          className="w-full px-3 md:px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm md:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none transition-all"
           disabled={loading}
         />
       </div>
 
       {/* Priority & Advanced Toggle */}
-      <div className="flex gap-3">
+      <div className="flex gap-2 md:gap-3">
         <div className="flex-1">
           <label className="block text-sm text-gray-400 mb-2">Priority</label>
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 md:px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-purple-500"
             disabled={loading}
           >
             <option value="low">🟢 Low</option>
@@ -115,9 +116,13 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+            className={`px-3 md:px-4 py-2 rounded-lg transition-all text-sm md:text-base whitespace-nowrap ${
+              showAdvanced
+                ? 'bg-purple-600 text-white shadow-lg'
+                : 'bg-gray-700 hover:bg-gray-600 text-white'
+            }`}
           >
-            {showAdvanced ? 'Less' : 'More'} Options
+            {showAdvanced ? '− Less' : '+ More'}
           </button>
         </div>
       </div>
@@ -196,10 +201,19 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
       <button
         type="submit"
         disabled={loading || !title.trim()}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transform hover:scale-[1.02] active:scale-[0.98]"
       >
-        <Plus size={20} />
-        {loading ? 'Adding...' : 'Add Task'}
+        {loading ? (
+          <>
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <span>Adding...</span>
+          </>
+        ) : (
+          <>
+            <Plus size={20} />
+            <span>Add Task</span>
+          </>
+        )}
       </button>
     </form>
   );
