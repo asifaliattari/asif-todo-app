@@ -7,6 +7,7 @@ import TaskForm from '@/components/TaskForm';
 import TaskList from '@/components/TaskList';
 import TaskStatistics from '@/components/TaskStatistics';
 import ProgressChart from '@/components/ProgressChart';
+import Chatbot from '@/components/Chatbot';
 import { api, Task } from '@/lib/api';
 import { LogOut, RefreshCw } from 'lucide-react';
 
@@ -118,6 +119,9 @@ function DashboardContent() {
           </p>
         </div>
       </div>
+
+      {/* AI Chatbot */}
+      <Chatbot />
     </div>
   );
 }
