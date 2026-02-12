@@ -197,24 +197,51 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
         </div>
       )}
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={loading || !title.trim()}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transform hover:scale-[1.02] active:scale-[0.98]"
-      >
-        {loading ? (
-          <>
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <span>Adding...</span>
-          </>
-        ) : (
-          <>
-            <Plus size={20} />
-            <span>Add Task</span>
-          </>
+      {/* Submit Button - Highlighted */}
+      <div className="relative">
+        {/* Animated ring for emphasis */}
+        {!loading && title.trim() && (
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg opacity-75 blur animate-pulse"></div>
         )}
-      </button>
+
+        <button
+          type="submit"
+          disabled={loading || !title.trim()}
+          className="relative w-full flex items-center justify-center gap-2 px-4 py-4 bg-gradient-to-r from-purple-600 via-purple-500 to-pink-600 hover:from-purple-700 hover:via-purple-600 hover:to-pink-700 text-white font-bold rounded-lg transition-all shadow-2xl hover:shadow-purple-500/60 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transform hover:scale-[1.03] active:scale-[0.97] text-lg border-2 border-white/10"
+        >
+          {/* Shine effect */}
+          <div className="absolute inset-0 rounded-lg overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"></div>
+          </div>
+
+          {loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <span>Adding Task...</span>
+            </>
+          ) : (
+            <>
+              <Plus size={22} className="font-bold" />
+              <span>Add Task</span>
+              <span className="text-xl">✨</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+      `}</style>
     </form>
   );
 }
