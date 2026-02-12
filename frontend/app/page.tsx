@@ -10,7 +10,7 @@ import ProgressChart from '@/components/ProgressChart';
 import TaskFilters from '@/components/TaskFilters';
 import Chatbot from '@/components/Chatbot';
 import { api, Task } from '@/lib/api';
-import { LogOut, RefreshCw, User } from 'lucide-react';
+import { LogOut, RefreshCw, User, Menu, X } from 'lucide-react';
 
 function DashboardContent() {
   const { user, logout } = useAuth();
@@ -61,42 +61,50 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 pb-20 md:pb-8">
+      <div className="max-w-4xl mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">TaskFlow</h1>
-            <p className="text-gray-400">Your personal task management system</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">TaskFlow</h1>
+            <p className="text-gray-400 text-sm md:text-base">Welcome, {user?.name}!</p>
           </div>
-          <div className="flex items-center gap-4">
-            {/* User Profile */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full">
-                <User size={20} className="text-white" />
-              </div>
-              <div className="text-left">
-                <p className="text-white font-semibold">{user?.name}</p>
-                <p className="text-gray-400 text-sm">{user?.email}</p>
-              </div>
-            </div>
 
-            {/* Action Buttons */}
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-3">
             <button
               onClick={fetchTasks}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
               title="Refresh tasks"
             >
               <RefreshCw size={18} />
-              Refresh
+              <span>Refresh</span>
             </button>
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg transition-colors"
               title="Logout"
             >
               <LogOut size={18} />
-              Logout
+              <span>Logout</span>
+            </button>
+          </div>
+
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={fetchTasks}
+              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+              title="Refresh"
+            >
+              <RefreshCw size={20} />
+            </button>
+            <button
+              onClick={logout}
+              className="p-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg transition-colors"
+              title="Logout"
+            >
+              <LogOut size={20} />
             </button>
           </div>
         </div>

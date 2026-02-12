@@ -71,7 +71,7 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-gray-800 p-4 md:p-6 rounded-lg shadow-lg border border-gray-700">
       {/* Title */}
       <div>
         <input
