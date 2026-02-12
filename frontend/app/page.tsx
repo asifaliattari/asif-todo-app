@@ -83,11 +83,13 @@ function DashboardContent() {
   const handleToggleTask = async (id: number) => {
     const updatedTask = await api.toggleTaskComplete(id);
     setTasks(tasks.map(t => t.id === id ? updatedTask : t));
+    setAllTasks(allTasks.map(t => t.id === id ? updatedTask : t));
   };
 
   const handleDeleteTask = async (id: number) => {
     await api.deleteTask(id);
     setTasks(tasks.filter(t => t.id !== id));
+    setAllTasks(allTasks.filter(t => t.id !== id));
   };
 
   const handleUpdateTask = async (id: number, title: string, description: string) => {
