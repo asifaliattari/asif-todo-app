@@ -41,17 +41,32 @@ class EmailService:
             html_part = MIMEText(html_content, "html")
             message.attach(html_part)
 
-            # Send email
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+            # Send email with timeout
+            print(f"Attempting to connect to {self.smtp_server}:{self.smtp_port}...")
+            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=10) as server:
+                print("Connected! Starting TLS...")
                 server.starttls()
+                print("TLS started! Logging in...")
                 server.login(self.sender_email, self.sender_password)
+                print("Logged in! Sending message...")
                 server.send_message(message)
+                print(f"Email sent successfully to {to_email}")
 
-            print(f"Email sent successfully to {to_email}")
             return True
 
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"SMTP Authentication failed: {str(e)}")
+            print("Please check your Gmail App Password is correct and 2-Step Verification is enabled")
+            return False
+        except smtplib.SMTPException as e:
+            print(f"SMTP error: {str(e)}")
+            return False
+        except TimeoutError as e:
+            print(f"Connection timeout: {str(e)}")
+            print("Gmail SMTP server is not reachable. Check network/firewall settings.")
+            return False
         except Exception as e:
-            print(f"Failed to send email: {str(e)}")
+            print(f"Failed to send email: {type(e).__name__}: {str(e)}")
             return False
 
     def get_task_reminder_email(self, task: Task, user_name: str, reminder_type: str) -> str:
