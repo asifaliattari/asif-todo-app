@@ -1,72 +1,54 @@
 """
 Email notification service for task reminders
+Uses SendGrid API for reliable email delivery
 """
 
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import List
 import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
 from sqlmodel import Session, select
 from app.models.task import Task
 from app.models.user import User
 
 
 class EmailService:
-    """Email notification service using Gmail SMTP"""
+    """Email notification service using SendGrid API"""
 
     def __init__(self):
-        # Email configuration from environment variables
-        self.smtp_server = "smtp.gmail.com"
-        self.smtp_port = 587
-        self.sender_email = os.getenv("SMTP_EMAIL", "")
-        self.sender_password = os.getenv("SMTP_PASSWORD", "")
+        # SendGrid API configuration from environment variables
+        self.sendgrid_api_key = os.getenv("SENDGRID_API_KEY", "")
+        self.sender_email = os.getenv("SENDER_EMAIL", "noreply@taskflow.app")
+        self.sender_name = "TaskFlow"
         self.app_name = "TaskFlow"
 
     def send_email(self, to_email: str, subject: str, html_content: str) -> bool:
-        """Send an email using Gmail SMTP"""
-        if not self.sender_email or not self.sender_password:
-            print("Email credentials not configured")
+        """Send an email using SendGrid API"""
+        if not self.sendgrid_api_key:
+            print("SendGrid API key not configured")
             return False
 
         try:
-            # Create message
-            message = MIMEMultipart("alternative")
-            message["Subject"] = subject
-            message["From"] = f"{self.app_name} <{self.sender_email}>"
-            message["To"] = to_email
+            print(f"Sending email to {to_email} via SendGrid...")
 
-            # Add HTML content
-            html_part = MIMEText(html_content, "html")
-            message.attach(html_part)
+            # Create SendGrid message
+            message = Mail(
+                from_email=Email(self.sender_email, self.sender_name),
+                to_emails=To(to_email),
+                subject=subject,
+                html_content=Content("text/html", html_content)
+            )
 
-            # Send email with timeout
-            print(f"Attempting to connect to {self.smtp_server}:{self.smtp_port}...")
-            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=10) as server:
-                print("Connected! Starting TLS...")
-                server.starttls()
-                print("TLS started! Logging in...")
-                server.login(self.sender_email, self.sender_password)
-                print("Logged in! Sending message...")
-                server.send_message(message)
-                print(f"Email sent successfully to {to_email}")
+            # Send via SendGrid API
+            sg = SendGridAPIClient(self.sendgrid_api_key)
+            response = sg.send(message)
 
+            print(f"✅ Email sent successfully! Status code: {response.status_code}")
             return True
 
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"SMTP Authentication failed: {str(e)}")
-            print("Please check your Gmail App Password is correct and 2-Step Verification is enabled")
-            return False
-        except smtplib.SMTPException as e:
-            print(f"SMTP error: {str(e)}")
-            return False
-        except TimeoutError as e:
-            print(f"Connection timeout: {str(e)}")
-            print("Gmail SMTP server is not reachable. Check network/firewall settings.")
-            return False
         except Exception as e:
-            print(f"Failed to send email: {type(e).__name__}: {str(e)}")
+            print(f"❌ Failed to send email: {type(e).__name__}: {str(e)}")
             return False
 
     def get_task_reminder_email(self, task: Task, user_name: str, reminder_type: str) -> str:
