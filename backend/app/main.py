@@ -85,6 +85,38 @@ def health_check():
     }
 
 
+@app.get("/api/health/db")
+def database_health_check():
+    """Database connection health check"""
+    from datetime import datetime
+    from app.database import get_session
+
+    try:
+        # Try to get a database session
+        session_gen = get_session()
+        session = next(session_gen)
+
+        # Try a simple query
+        from sqlmodel import text
+        result = session.exec(text("SELECT 1")).first()
+
+        session.close()
+
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.utcnow().isoformat(),
+            "test_query": "passed"
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
