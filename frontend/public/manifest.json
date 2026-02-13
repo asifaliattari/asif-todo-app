@@ -1,0 +1,19 @@
+{
+  "name": "TaskFlow - Todo App",
+  "short_name": "TaskFlow",
+  "description": "A modern task management app with AI chatbot by Asif Ali AstolixGen",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#9333ea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"]
+}

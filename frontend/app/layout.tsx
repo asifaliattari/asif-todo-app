@@ -9,6 +9,16 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "TaskFlow - Todo App by Asif Ali AstolixGen",
   description: "A modern task management app built for GIAIC Hackathon 2026",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-icon.svg', type: 'image/svg+xml' },
+    ],
+  },
+  themeColor: '#9333ea',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
