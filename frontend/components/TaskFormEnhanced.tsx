@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Calendar, Tag as TagIcon, Clock, Repeat } from 'lucide-react';
+import { Plus, Calendar, Tag as TagIcon, Clock, Repeat, Bell } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -23,6 +23,7 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
   const [priority, setPriority] = useState('medium');
   const [tags, setTags] = useState('');
   const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [reminderDate, setReminderDate] = useState<Date | null>(null);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState('weekly');
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,10 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
         taskData.due_date = dueDate.toISOString();
       }
 
+      if (reminderDate) {
+        taskData.reminder_date = reminderDate.toISOString();
+      }
+
       if (isRecurring) {
         taskData.is_recurring = true;
         taskData.recurrence_pattern = {
@@ -61,6 +66,7 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
       setPriority('medium');
       setTags('');
       setDueDate(null);
+      setReminderDate(null);
       setIsRecurring(false);
       setShowAdvanced(false);
     } catch (error) {
@@ -165,6 +171,31 @@ export default function TaskFormEnhanced({ onSubmit }: TaskFormEnhancedProps) {
               calendarClassName="bg-gray-800 border-gray-700"
               minDate={new Date()}
             />
+          </div>
+
+          {/* Reminder Date & Time */}
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+              <Bell size={16} />
+              Reminder Alert
+              <span className="text-xs text-gray-500">(Get email notification)</span>
+            </label>
+            <DatePicker
+              selected={reminderDate}
+              onChange={(date: Date | null) => setReminderDate(date)}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="MMMM d, yyyy h:mm aa"
+              placeholderText="When to remind you?"
+              disabled={loading}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              calendarClassName="bg-gray-800 border-gray-700"
+              minDate={new Date()}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Tip: Set reminder before due date (e.g., 1 hour before, 1 day before)
+            </p>
           </div>
 
           {/* Recurring */}
