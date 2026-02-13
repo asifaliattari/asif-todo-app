@@ -108,11 +108,6 @@ function DashboardContent() {
     setSelectedTask(null);
   };
 
-  const handleEditFromModal = () => {
-    // Modal will close, inline edit will be available
-    setIsModalOpen(false);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 pb-20 md:pb-8">
       <div className="max-w-4xl mx-auto px-3 md:px-4 py-4 md:py-8">
@@ -223,7 +218,7 @@ function DashboardContent() {
           onClose={handleCloseModal}
           onToggle={handleToggleTask}
           onDelete={handleDeleteTask}
-          onEdit={handleEditFromModal}
+          onUpdate={handleUpdateTask}
         />
       )}
 

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Task } from '@/lib/api';
-import { X, Calendar, Tag as TagIcon, Repeat, CheckCircle2, Circle, Trash2, Pencil } from 'lucide-react';
+import { X, Calendar, Tag as TagIcon, Repeat, CheckCircle2, Circle, Trash2, Pencil, Check } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface TaskDetailModalProps {
@@ -10,7 +11,7 @@ interface TaskDetailModalProps {
   onClose: () => void;
   onToggle: (id: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
-  onEdit: () => void;
+  onUpdate: (id: number, title: string, description: string) => Promise<void>;
 }
 
 export default function TaskDetailModal({
@@ -19,8 +20,13 @@ export default function TaskDetailModal({
   onClose,
   onToggle,
   onDelete,
-  onEdit
+  onUpdate
 }: TaskDetailModalProps) {
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDescription, setEditDescription] = useState(task.description || '');
+  const [loading, setLoading] = useState(false);
+
   if (!isOpen) return null;
 
   const handleToggle = async () => {
@@ -35,8 +41,30 @@ export default function TaskDetailModal({
   };
 
   const handleEdit = () => {
-    onEdit();
-    onClose();
+    setEditTitle(task.title);
+    setEditDescription(task.description || '');
+    setIsEditMode(true);
+  };
+
+  const handleSave = async () => {
+    if (!editTitle.trim()) return;
+
+    setLoading(true);
+    try {
+      await onUpdate(task.id, editTitle, editDescription);
+      setIsEditMode(false);
+      onClose();
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditTitle(task.title);
+    setEditDescription(task.description || '');
+    setIsEditMode(false);
   };
 
   return (
@@ -98,13 +126,42 @@ export default function TaskDetailModal({
 
           {/* Content */}
           <div className="p-6 space-y-6">
-            {/* Description */}
-            {task.description && (
-              <div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-2">Description</h3>
-                <p className="text-white text-base leading-relaxed">{task.description}</p>
+            {/* Edit Mode */}
+            {isEditMode ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold text-gray-400 mb-2 block">Title</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="Task title"
+                    disabled={loading}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-400 mb-2 block">Description</label>
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    placeholder="Add more details (optional)"
+                    disabled={loading}
+                  />
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                {/* Description */}
+                {task.description && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2">Description</h3>
+                    <p className="text-white text-base leading-relaxed">{task.description}</p>
+                  </div>
+                )}
 
             {/* Tags */}
             {task.tags && task.tags.length > 0 && (
@@ -178,38 +235,61 @@ export default function TaskDetailModal({
               </div>
             )}
 
-            {/* Status */}
-            <div className={`rounded-lg p-4 ${
-              task.completed
-                ? 'bg-green-500/10 border border-green-500/30'
-                : 'bg-yellow-500/10 border border-yellow-500/30'
-            }`}>
-              <p className={`font-semibold ${
-                task.completed ? 'text-green-400' : 'text-yellow-400'
-              }`}>
-                {task.completed ? '✅ Task Completed' : '⏳ Task Pending'}
-              </p>
-            </div>
+                {/* Status */}
+                <div className={`rounded-lg p-4 ${
+                  task.completed
+                    ? 'bg-green-500/10 border border-green-500/30'
+                    : 'bg-yellow-500/10 border border-yellow-500/30'
+                }`}>
+                  <p className={`font-semibold ${
+                    task.completed ? 'text-green-400' : 'text-yellow-400'
+                  }`}>
+                    {task.completed ? '✅ Task Completed' : '⏳ Task Pending'}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Actions */}
           <div className="sticky bottom-0 bg-gray-800 border-t border-gray-700 p-6 rounded-b-2xl">
-            <div className="flex gap-3">
-              <button
-                onClick={handleEdit}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                <Pencil size={18} />
-                Edit Task
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                <Trash2 size={18} />
-                Delete
-              </button>
-            </div>
+            {isEditMode ? (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  disabled={loading || !editTitle.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Check size={18} />
+                  Save Changes
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  <X size={18} />
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleEdit}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  <Pencil size={18} />
+                  Edit Task
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  <Trash2 size={18} />
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
