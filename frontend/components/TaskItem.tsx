@@ -105,8 +105,8 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdate, onViewDet
   }
 
   return (
-    <div className={`bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-3 md:p-4 transition-all hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${task.completed ? 'opacity-60' : ''} cursor-pointer`}>
-      <div className="flex items-start gap-2 md:gap-3" onClick={() => setIsEditing(true)}>
+    <div className={`bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-3 md:p-4 transition-all hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 ${task.completed ? 'opacity-60' : ''} ${onViewDetails ? 'cursor-pointer' : ''}`}>
+      <div className="flex items-start gap-2 md:gap-3" onClick={onViewDetails}>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -174,6 +174,17 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdate, onViewDet
         </div>
 
         <div className="flex flex-col md:flex-row gap-1 md:gap-2 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+            disabled={loading}
+            className="text-blue-400 hover:text-blue-300 hover:scale-110 transition-all disabled:opacity-50 p-1"
+            title="Quick edit"
+          >
+            <Pencil size={18} />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
